@@ -15,6 +15,11 @@ def _make_parsed(entries, path: str = ".env") -> ParsedEnvFile:
     return ParsedEnvFile(path=path, entries=entries)
 
 
+def _issue_messages(result: LintResult) -> list[str]:
+    """Return all issue messages from a LintResult for easy assertion."""
+    return [i.message for i in result.issues]
+
+
 # --- LintResult helpers ---
 
 def test_lint_result_no_issues():
@@ -47,14 +52,13 @@ def test_lint_flags_lowercase_key():
     parsed = _make_parsed([_make_entry("database_url", "value", 1)])
     result = lint_env_file(parsed)
     assert result.has_issues
-    messages = [i.message for i in result.issues]
-    assert any("UPPER_SNAKE_CASE" in m for m in messages)
+    assert any("UPPER_SNAKE_CASE" in m for m in _issue_messages(result))
 
 
 def test_lint_flags_mixed_case_key():
     parsed = _make_parsed([_make_entry("MyKey", "value", 1)])
     result = lint_env_file(parsed)
-    assert any("UPPER_SNAKE_CASE" in i.message for i in result.issues)
+    assert any("UPPER_SNAKE_CASE" in m for m in _issue_messages(result))
 
 
 # --- lint_env_file: empty value ---
@@ -62,7 +66,7 @@ def test_lint_flags_mixed_case_key():
 def test_lint_flags_empty_value():
     parsed = _make_parsed([_make_entry("SECRET_KEY", "", 1)])
     result = lint_env_file(parsed)
-    assert any("empty" in i.message for i in result.issues)
+    assert any("empty" in m for m in _issue_messages(result))
 
 
 # --- lint_env_file: space in key ---
@@ -70,7 +74,7 @@ def test_lint_flags_empty_value():
 def test_lint_flags_space_in_key():
     parsed = _make_parsed([_make_entry("MY KEY", "value", 1)])
     result = lint_env_file(parsed)
-    assert any("spaces" in i.message for i in result.issues)
+    assert any("spaces" in m for m in _issue_messages(result))
 
 
 # --- lint_env_file: duplicate key ---
