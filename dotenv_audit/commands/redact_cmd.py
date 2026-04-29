@@ -10,6 +10,14 @@ from dotenv_audit.parser import ParsedEnvFile
 from dotenv_audit.redactor import RedactedEnvFile
 
 
+def _print_redacted_to_stdout(path: Path, redacted: RedactedEnvFile) -> None:
+    """Print redacted file contents to stdout with a header."""
+    print(f"# --- {path} ---")
+    for line in redacted.lines():
+        print(line)
+    print()
+
+
 def cmd_redact(args: argparse.Namespace) -> int:
     """Redact secrets found in .env files under *directory*.
 
@@ -41,10 +49,7 @@ def cmd_redact(args: argparse.Namespace) -> int:
             path.write_text("\n".join(redacted.lines()) + "\n", encoding="utf-8")
             print(f"[redacted] {path} — keys: {', '.join(sorted(redacted.redacted_keys))}")
         else:
-            print(f"# --- {path} ---")
-            for line in redacted.lines():
-                print(line)
-            print()
+            _print_redacted_to_stdout(path, redacted)
 
     if any_redacted and not args.in_place:
         return 1  # signal that secrets were found but not written
