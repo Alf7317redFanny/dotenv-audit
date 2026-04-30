@@ -66,6 +66,17 @@ def test_to_json_valid():
     assert parsed["secrets"][0]["key"] == "X"
 
 
+def test_to_json_empty_export():
+    """to_json should still produce valid JSON with both keys present when export is empty."""
+    export = AuditExport(secrets=[], comparisons=[])
+    result = to_json(export)
+    parsed = json.loads(result)
+    assert "secrets" in parsed
+    assert "comparisons" in parsed
+    assert parsed["secrets"] == []
+    assert parsed["comparisons"] == []
+
+
 def test_to_csv_headers():
     export = AuditExport(secrets=[], comparisons=[])
     csv_str = to_csv(export)
