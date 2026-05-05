@@ -39,15 +39,30 @@ _UPPERCASE_HINT = "key should be UPPER_SNAKE_CASE"
 _EMPTY_VALUE_HINT = "value is empty — consider adding a placeholder like 'changeme'"
 _SPACE_IN_KEY_HINT = "key contains spaces"
 _DUPLICATE_KEY_HINT = "duplicate key detected"
+_LEADING_TRAILING_SPACE_HINT = "key has leading or trailing whitespace"
 
 
 def lint_env_file(parsed: ParsedEnvFile) -> LintResult:
+    """Run all lint checks against a parsed .env file and return a LintResult.
+
+    Checks performed:
+    - Keys with leading/trailing whitespace
+    - Keys containing spaces
+    - Keys that are not UPPER_SNAKE_CASE
+    - Empty values
+    - Duplicate keys
+    """
     result = LintResult(path=parsed.path)
     seen_keys: dict[str, int] = {}
 
     for entry in parsed.entries:
         ln = entry.line_number
         k = entry.key
+
+        if k != k.strip():
+            result.issues.append(LintIssue(ln, k, _LEADING_TRAILING_SPACE_HINT))
+            # Normalise for further checks so we don't produce misleading messages
+            k = k.strip()
 
         if " " in k:
             result.issues.append(LintIssue(ln, k, _SPACE_IN_KEY_HINT))
