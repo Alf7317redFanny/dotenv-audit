@@ -35,6 +35,16 @@ class EnvTemplate:
         """Render the template as a single string."""
         return "\n".join(self.lines())
 
+    def write(self, path: str) -> None:
+        """Write the rendered template to *path*.
+
+        Creates or overwrites the file at the given path with the rendered
+        template content, appending a trailing newline.
+        """
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(self.render())
+            fh.write("\n")
+
     @property
     def key_count(self) -> int:
         return len(self.entries)
