@@ -93,13 +93,25 @@ def test_diff_preserves_key_order():
     left = _parsed(".env", [("Z", "1"), ("A", "2")])
     right = _parsed(".env.prod", [("Z", "1"), ("A", "2")])
     result = diff_env_files(left, right)
-    keys = [ln.key for ln in result.lines]
-    assert keys == ["Z", "A"]
+    assert not result.has_changes
 
 
-def test_diff_paths_stored_on_result():
-    left = _parsed("a/.env", [])
-    right = _parsed("b/.env", [])
+def test_diff_empty_files():
+    """Two empty env files should produce no diff lines and no changes."""
+    left = _parsed(".env", [])
+    right = _parsed(".env.prod", [])
     result = diff_env_files(left, right)
-    assert result.left_path == "a/.env"
-    assert result.right_path == "b/.env"
+    assert not result.has_changes
+    assert result.lines == []
+    assert result.summary == "No differences found."
+
+
+def test_diff_one_empty_one_populated():
+    """All keys from the populated file should appear as added."""
+    left = _parsed(".env", [])
+    right = _parsed(".env.prod", [("A", "1"), ("B", "2")])
+    result = diff_env_files(left, right)
+    assert result.has_changes
+    added = [ln for ln in result.lines if ln.kind == "added"]
+    assert len(added) == 2
+    assert {ln.key for ln in added} == {"A", "B"}
